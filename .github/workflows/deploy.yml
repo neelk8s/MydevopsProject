@@ -1,0 +1,36 @@
+name: Salesforce CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+
+    # Step 1: Checkout code
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    # Step 2: Install Salesforce CLI
+    - name: Install Salesforce CLI
+      run: npm install --global @salesforce/cli
+
+    # Step 3: Authenticate to Salesforce
+    - name: Authenticate to Salesforce
+      run: |
+        echo "${{ secrets.SFDX_AUTH_URL }}" > auth.txt
+        sf org login sfdx-url --sfdx-url-file auth.txt --alias myorg
+
+    # Step 4: Run Apex tests
+    - name: Run Apex Tests
+      run: |
+        sf apex run test --target-org myorg --wait 10
+
+    # Step 5: Deploy to Salesforce
+    - name: Deploy to Salesforce
+      run: |
+        sf project deploy start --target-org myorg
